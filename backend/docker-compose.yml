@@ -1,9 +1,10 @@
-
 services:
   server:
     build: ./server
     ports:
       - "8761:8761"
+    depends_on:
+      - mongodb
 
   user:
     build: ./userService
@@ -35,3 +36,11 @@ services:
       - user
       - product
       - media
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/db:/data/db
