@@ -5,7 +5,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.user.userService.enums.Role;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Document("user")
+@AllArgsConstructor
+@Data
+@NoArgsConstructor
 public class User {
     @Id
     String id;
