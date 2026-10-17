@@ -6,16 +6,22 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.user.userService.securityFilters.GatewayIdentityFilter;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain enableSpringSecurity(HttpSecurity http) {
+        public SecurityFilterChain enableSpringSecurity(
+            HttpSecurity http,
+            GatewayIdentityFilter gatewayIdentityFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll().anyRequest().authenticated())
+            .addFilterBefore(gatewayIdentityFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .build();
 
     }
