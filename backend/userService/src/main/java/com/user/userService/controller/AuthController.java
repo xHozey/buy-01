@@ -32,9 +32,4 @@ public class AuthController {
         String token = authService.login(req);
         return new LoginRes(token);
     }
-
-    @GetMapping("/zabi")
-    public String Test() {
-        return "wayeeh";
-    }
 }
