@@ -35,10 +35,15 @@ services:
     environment:
       SPRING_MONGODB_URI: ${SPRING_MONGODB_URI:-mongodb://admin:password@mongodb:27017/?authSource=admin}
       SPRING_MONGODB_DATABASE: ${SPRING_MONGODB_DATABASE:-mediaDB}
+      MEDIA_STORAGE_ENDPOINT: ${MEDIA_STORAGE_ENDPOINT:-http://rustfs:9000}
+      MEDIA_STORAGE_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      MEDIA_STORAGE_SECRET_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
+      MEDIA_STORAGE_BUCKET: ${MEDIA_STORAGE_BUCKET:-media}
     ports:
       - "8083:8083"
     depends_on:
       - server
+      - rustfs
 
   gateway:
     hostname: gatewat
@@ -61,3 +66,23 @@ services:
       - "27017:27017"
     volumes:
       - ./data/db:/data/db
+
+  rustfs:
+    image: rustfs/rustfs:1.0.3
+    hostname: rustfs
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs_data:/data
+    restart: unless-stopped
+
+volumes:
+  rustfs_data:
