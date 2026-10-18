@@ -1,6 +1,8 @@
 package com.media.mediaService.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,25 @@ public class MediaController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
         } catch (IOException exception) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload image", exception);
+        }
+    }
+
+    @PostMapping("/upload/multiple")
+    public Map<String, List<String>> uploadImages(@RequestPart("files") List<MultipartFile> files) {
+        if (files.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one image is required");
+        }
+
+        List<String> keys = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                keys.add(mediaService.uploadImage(file));
+            }
+            return Map.of("keys", keys);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload images", exception);
         }
     }
 }
