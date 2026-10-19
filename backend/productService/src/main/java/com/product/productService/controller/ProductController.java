@@ -32,6 +32,11 @@ public class ProductController {
         return productService.getAll();
     }
 
+    @GetMapping("/mine")
+    public List<ProductRes> getMyProducts(Authentication authentication) {
+        return productService.getMine(authentication);
+    }
+
     @GetMapping("/{id}")
     public ProductRes getProduct(@PathVariable String id) {
         return productService.getById(id);

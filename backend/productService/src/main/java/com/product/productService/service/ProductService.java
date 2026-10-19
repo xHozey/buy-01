@@ -29,6 +29,13 @@ public class ProductService {
                 .toList();
     }
 
+    public List<ProductRes> getMine(Authentication authentication) {
+        requireSeller(authentication);
+        return productRepository.findAllByUserId(authentication.getName()).stream()
+                .map(product -> toResponse(product, mediaClient.getImageUrls(product.getId())))
+                .toList();
+    }
+
     public ProductRes getById(String productId) {
         Product product = findProduct(productId);
         return toResponse(product, mediaClient.getImageUrls(product.getId()));

@@ -1,7 +1,6 @@
 package com.media.mediaService.service;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 import jakarta.annotation.PostConstruct;
@@ -59,10 +58,7 @@ public class MediaService {
 			throw new IllegalArgumentException("Only image files are supported");
 		}
 
-		String filename = Paths.get(file.getOriginalFilename() == null ? "image" : file.getOriginalFilename())
-				.getFileName()
-				.toString();
-		String key = "images/" + UUID.randomUUID() + "-" + filename;
+		String key = "images/" + UUID.randomUUID();
 
 		PutObjectRequest request = PutObjectRequest.builder()
 				.bucket(bucket)

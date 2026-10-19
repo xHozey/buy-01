@@ -1,0 +1,49 @@
+<main class="dashboard">
+  <header class="dashboard-header">
+    <a class="brand" routerLink="/">BUY<span>.</span></a>
+    <div class="header-meta"><span>SELLER STUDIO</span><button type="button" (click)="startNewProduct()">+ New product</button></div>
+  </header>
+
+  <section class="dashboard-intro">
+    <div><p class="eyebrow">YOUR CATALOGUE</p><h1>Make room<br /><em>for good things.</em></h1></div>
+    <p class="intro-copy">Shape your collection, keep the details clear, and let the right objects speak for themselves.</p>
+  </section>
+
+  @if (errorMessage) {
+    <p class="error dashboard-error" role="alert">{{ errorMessage }}</p>
+  }
+
+  <section class="workspace">
+    <form class="product-editor" [formGroup]="form" (ngSubmit)="saveProduct()" novalidate>
+      <div class="editor-heading"><div><p class="eyebrow">{{ editingId ? 'EDIT PRODUCT' : 'NEW PRODUCT' }}</p><h2>{{ editingId ? 'Refine the details' : 'Add to the collection' }}</h2></div><span class="step">01 / 02</span></div>
+      <label>Product name<input formControlName="name" placeholder="A name with some character" />@if (form.controls.name.touched && form.controls.name.invalid) {<small>Name is required.</small>}</label>
+      <label>Description<textarea formControlName="description" rows="4" placeholder="What makes it worth finding?"></textarea>@if (form.controls.description.touched && form.controls.description.invalid) {<small>Description is required.</small>}</label>
+      <div class="form-row"><label>Price<input type="number" min="0.01" step="0.01" formControlName="price" placeholder="0.00" />@if (form.controls.price.touched && form.controls.price.invalid) {<small>Price must be greater than 0.</small>}</label><label>Quantity<input type="number" min="0" formControlName="quantity" />@if (form.controls.quantity.touched && form.controls.quantity.invalid) {<small>Quantity cannot be negative.</small>}</label></div>
+
+      <div class="image-section"><div class="section-label"><span>Images</span><small>Up to 2 MB each</small></div><label class="upload-box"><input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" /><strong>Drop images here or <u>browse</u></strong><span>JPG, PNG or WEBP</span></label>
+        @if (imageUrls.length || pendingImages.length) {
+          <div class="image-grid">
+            @for (url of imageUrls; track url; let i = $index) {
+              <figure><img [src]="imageSrc(url)" alt="Product preview" /><button type="button" (click)="removeExistingImage(i)" aria-label="Remove image">×</button></figure>
+            }
+            @for (image of pendingImages; track image.previewUrl; let i = $index) {
+              <figure><img [src]="image.previewUrl" [alt]="image.file.name" /><button type="button" (click)="removePendingImage(i)" aria-label="Remove image">×</button></figure>
+            }
+          </div>
+        }
+      </div>
+      <button class="save-button" type="submit" [disabled]="saving">{{ saving ? 'Saving...' : (editingId ? 'Save changes' : 'Publish product') }} <span>↗</span></button>
+    </form>
+
+    <section class="catalogue"><div class="catalogue-heading"><div><p class="eyebrow">LIVE CATALOGUE</p><h2>Your products</h2></div><span>{{ products.length | number:'2.0-0' }}</span></div>
+      @if (loading) {
+        <p class="loading">Loading your catalogue...</p>
+      } @else if (!products.length) {
+        <p class="empty">Your catalogue is waiting for its first find.</p>
+      }
+      @for (product of products; track product.id) {
+        <article class="product-row" [class.active]="editingId === product.id"><div class="product-thumb">@if (product.imageUrls?.length) {<img [src]="imageSrc(product.imageUrls[0])" alt="" />} @else {<span>No image</span>}</div><div class="product-info"><h3>{{ product.name }}</h3><p>{{ product.description }}</p><strong>${{ product.price | number:'1.2-2' }}</strong></div><div class="row-actions"><button type="button" (click)="selectProduct(product)" aria-label="Edit product">Edit</button><button type="button" (click)="deleteProduct(product)" aria-label="Delete product">Delete</button></div></article>
+      }
+    </section>
+  </section>
+</main>

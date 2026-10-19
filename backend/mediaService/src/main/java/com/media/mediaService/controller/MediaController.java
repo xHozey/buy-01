@@ -1,6 +1,8 @@
 package com.media.mediaService.controller;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +17,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.media.mediaService.service.MediaService;
 import com.media.mediaService.reposiroty.MediaRepository;
-import com.media.mediaService.model.Media;
 
 @RestController
 @RequestMapping("/api/v1/media")
@@ -48,8 +50,7 @@ public class MediaController {
         requireSeller(authentication);
         try {
             String key = mediaService.uploadImage(file);
-            Media media = mediaRepository.save(new Media(null, key, null));
-            return Map.of("id", media.getId(), "url", "/api/v1/media/images/" + media.getId());
+            return Map.of("id", key, "url", imageUrl(key));
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
         } catch (IOException exception) {
@@ -57,13 +58,11 @@ public class MediaController {
         }
     }
 
-    @GetMapping("/images/{id}")
-    public ResponseEntity<byte[]> getImage(@PathVariable String id) {
-        Media media = mediaRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found"));
+    @GetMapping("/images")
+    public ResponseEntity<byte[]> getImage(@RequestParam String key) {
         try {
-            MediaService.StoredImage image = mediaService.getImage(media.getImagePath());
-                MediaType contentType = MediaType.parseMediaType(image.contentType());
+            MediaService.StoredImage image = mediaService.getImage(key);
+            MediaType contentType = MediaType.parseMediaType(image.contentType());
             return ResponseEntity.ok()
                     .contentType(contentType)
                     .cacheControl(CacheControl.maxAge(java.time.Duration.ofDays(30)).cachePublic())
@@ -74,17 +73,20 @@ public class MediaController {
     }
 
     @PostMapping("/upload/multiple")
-    public Map<String, List<String>> uploadImages(@RequestPart("files") List<MultipartFile> files) {
+    public Map<String, List<String>> uploadImages(@RequestPart("files") List<MultipartFile> files,
+            Authentication authentication) {
+        requireSeller(authentication);
         if (files.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one image is required");
         }
 
-        List<String> keys = new ArrayList<>();
+        List<String> urls = new ArrayList<>();
         try {
             for (MultipartFile file : files) {
-                keys.add(mediaService.uploadImage(file));
+                String key = mediaService.uploadImage(file);
+                urls.add(imageUrl(key));
             }
-            return Map.of("keys", keys);
+            return Map.of("urls", urls);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
         } catch (IOException exception) {
@@ -99,5 +101,9 @@ public class MediaController {
         if (!seller) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller role required");
         }
+    }
+
+    private String imageUrl(String key) {
+        return "/api/v1/media/images?key=" + URLEncoder.encode(key, StandardCharsets.UTF_8);
     }
 }
