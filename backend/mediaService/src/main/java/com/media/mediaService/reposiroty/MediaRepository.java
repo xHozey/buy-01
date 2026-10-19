@@ -9,4 +9,5 @@ public interface MediaRepository extends MongoRepository<Media, String> {
 	List<Media> findByProductId(String productId);
 
 	void deleteByProductId(String productId);
+
 }

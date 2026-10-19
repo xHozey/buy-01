@@ -15,12 +15,16 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 public class MediaService {
+	public static final long MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
 	private static final Logger logger = LoggerFactory.getLogger(MediaService.class);
 
@@ -45,8 +49,14 @@ public class MediaService {
 	public String uploadImage(MultipartFile file) throws IOException {
 		ensureBucketExists();
 
-		if (file.isEmpty() || file.getContentType() == null || !file.getContentType().startsWith("image/")) {
-			throw new IllegalArgumentException("Only non-empty image files are supported");
+		if (file.isEmpty()) {
+			throw new IllegalArgumentException("Image file must not be empty");
+		}
+		if (file.getSize() > MAX_IMAGE_SIZE) {
+			throw new IllegalArgumentException("Image file must be at most 2 MB");
+		}
+		if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
+			throw new IllegalArgumentException("Only image files are supported");
 		}
 
 		String filename = Paths.get(file.getOriginalFilename() == null ? "image" : file.getOriginalFilename())
@@ -61,6 +71,15 @@ public class MediaService {
 				.build();
 		s3Client.putObject(request, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 		return key;
+	}
+
+	public StoredImage getImage(String key) {
+		ResponseBytes<GetObjectResponse> response = s3Client.getObjectAsBytes(
+				GetObjectRequest.builder().bucket(bucket).key(key).build());
+		return new StoredImage(response.asByteArray(), response.response().contentType());
+	}
+
+	public record StoredImage(byte[] content, String contentType) {
 	}
 
 	private void ensureBucketExists() {

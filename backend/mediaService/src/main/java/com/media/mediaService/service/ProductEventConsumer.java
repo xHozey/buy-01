@@ -35,7 +35,7 @@ public class ProductEventConsumer {
         }
 
         mediaRepository.saveAll(Arrays.stream(product.imageUrls())
-                .map(imageUrl -> new Media(null, imageUrl, product.productId()))
+            .map(imageUrl -> new Media(null, imageUrl, product.productId()))
                 .toList());
         logger.info("Saved {} media entries for product {}", product.imageUrls().length, product.productId());
     }
