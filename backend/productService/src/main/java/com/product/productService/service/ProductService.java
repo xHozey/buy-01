@@ -3,12 +3,14 @@ package com.product.productService.service;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.product.productService.dto.ProductReq;
 import com.product.productService.dto.ProductRes;
+import com.product.productService.config.ProductTopic;
 import com.product.productService.model.Product;
 import com.product.productService.reposiroty.ProductRepository;
 
@@ -18,6 +20,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
+    private final KafkaTemplate<String, ProductRes> kafkaTemplate;
 
     public List<ProductRes> getAll() {
         return productRepository.findAll().stream().map(this::toResponse).toList();
@@ -32,7 +35,13 @@ public class ProductService {
 
         Product product = new Product(null, req.name(), req.description(), req.price(), req.quantity(),
                 authentication.getName());
-        return toResponse(productRepository.save(product));
+        ProductRes response = toResponse(productRepository.save(product));
+        sendProduct(response);
+        return response;
+    }
+
+    public void sendProduct(ProductRes product) {
+        kafkaTemplate.send(ProductTopic.NAME, product.id(), product);
     }
 
     public ProductRes update(String productId, ProductReq req, Authentication authentication) {
