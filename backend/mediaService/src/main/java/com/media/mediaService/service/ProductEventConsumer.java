@@ -27,16 +27,19 @@ public class ProductEventConsumer {
     @KafkaListener(topics = "product-topic", groupId = "media-service")
     public void consumeProduct(String productMessage) throws JsonProcessingException {
         ProductEvent product = objectMapper.readValue(productMessage, ProductEvent.class);
-        if (product.imageUrls() == null || product.imageUrls().length == 0) {
+        if ("DELETE".equals(product.operation()) || "UPDATE".equals(product.operation())) {
+            mediaRepository.deleteByProductId(product.productId());
+        }
+        if ("DELETE".equals(product.operation()) || product.imageUrls() == null || product.imageUrls().length == 0) {
             return;
         }
 
         mediaRepository.saveAll(Arrays.stream(product.imageUrls())
-                .map(imageUrl -> new Media(null, imageUrl, product.id()))
+                .map(imageUrl -> new Media(null, imageUrl, product.productId()))
                 .toList());
-        logger.info("Saved {} media entries for product {}", product.imageUrls().length, product.id());
+        logger.info("Saved {} media entries for product {}", product.imageUrls().length, product.productId());
     }
 
-    private record ProductEvent(String id, String[] imageUrls) {
+    private record ProductEvent(String operation, String productId, String[] imageUrls) {
     }
 }

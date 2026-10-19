@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.product.productService.dto.ProductReq;
 import com.product.productService.dto.ProductRes;
+import com.product.productService.dto.ProductEvent;
 import com.product.productService.config.ProductTopic;
 import com.product.productService.model.Product;
 import com.product.productService.reposiroty.ProductRepository;
@@ -20,14 +21,17 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
-    private final KafkaTemplate<String, ProductRes> kafkaTemplate;
+    private final KafkaTemplate<String, ProductEvent> kafkaTemplate;
+    private final MediaClient mediaClient;
 
     public List<ProductRes> getAll() {
-        return productRepository.findAll().stream().map(this::toResponse).toList();
+        return productRepository.findAll().stream().map(product -> toResponse(product, mediaClient.getImageUrls(product.getId())))
+                .toList();
     }
 
     public ProductRes getById(String productId) {
-        return toResponse(findProduct(productId));
+        Product product = findProduct(productId);
+        return toResponse(product, mediaClient.getImageUrls(product.getId()));
     }
 
     public ProductRes create(ProductReq req, Authentication authentication) {
@@ -35,13 +39,14 @@ public class ProductService {
 
         Product product = new Product(null, req.name(), req.description(), req.price(), req.quantity(),
                 authentication.getName());
-        ProductRes response = toResponse(productRepository.save(product), req.imageUrls());
-        sendProduct(response);
+        Product savedProduct = productRepository.save(product);
+        ProductRes response = toResponse(savedProduct, req.imageUrls());
+        sendProduct(new ProductEvent("CREATE", savedProduct.getId(), req.imageUrls()));
         return response;
     }
 
-    public void sendProduct(ProductRes product) {
-        kafkaTemplate.send(ProductTopic.NAME, product.id(), product);
+    public void sendProduct(ProductEvent productEvent) {
+        kafkaTemplate.send(ProductTopic.NAME, productEvent.productId(), productEvent);
     }
 
     public ProductRes update(String productId, ProductReq req, Authentication authentication) {
@@ -51,12 +56,15 @@ public class ProductService {
         product.setDescription(req.description());
         product.setPrice(req.price());
         product.setQuantity(req.quantity());
-        return toResponse(productRepository.save(product));
+        Product savedProduct = productRepository.save(product);
+        sendProduct(new ProductEvent("UPDATE", savedProduct.getId(), req.imageUrls()));
+        return toResponse(savedProduct, req.imageUrls());
     }
 
     public void delete(String productId, Authentication authentication) {
         Product product = findOwnedProduct(productId, authentication);
         productRepository.delete(product);
+        sendProduct(new ProductEvent("DELETE", productId, null));
     }
 
     private Product findOwnedProduct(String productId, Authentication authentication) {
@@ -80,11 +88,6 @@ public class ProductService {
         if (!seller) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller role required");
         }
-    }
-
-    private ProductRes toResponse(Product product) {
-        return new ProductRes(product.getId(), product.getName(), product.getDescription(), product.getPrice(),
-                product.getQuantity(), product.getUserId(), null);
     }
 
     private ProductRes toResponse(Product product, String[] imageUrls) {

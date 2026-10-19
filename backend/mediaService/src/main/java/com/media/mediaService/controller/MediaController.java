@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,15 +16,25 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.media.mediaService.service.MediaService;
+import com.media.mediaService.reposiroty.MediaRepository;
 
 @RestController
 @RequestMapping("/api/v1/media")
 public class MediaController {
 
     private final MediaService mediaService;
+    private final MediaRepository mediaRepository;
 
-    public MediaController(MediaService mediaService) {
+    public MediaController(MediaService mediaService, MediaRepository mediaRepository) {
         this.mediaService = mediaService;
+        this.mediaRepository = mediaRepository;
+    }
+
+    @GetMapping("/products/{productId}")
+    public List<String> getProductMedia(@PathVariable String productId) {
+        return mediaRepository.findByProductId(productId).stream()
+                .map(media -> media.getImagePath())
+                .toList();
     }
 
     @PostMapping("/upload")
