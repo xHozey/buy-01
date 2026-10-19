@@ -35,7 +35,7 @@ public class ProductService {
 
         Product product = new Product(null, req.name(), req.description(), req.price(), req.quantity(),
                 authentication.getName());
-        ProductRes response = toResponse(productRepository.save(product));
+        ProductRes response = toResponse(productRepository.save(product), req.imageUrls());
         sendProduct(response);
         return response;
     }
@@ -84,6 +84,11 @@ public class ProductService {
 
     private ProductRes toResponse(Product product) {
         return new ProductRes(product.getId(), product.getName(), product.getDescription(), product.getPrice(),
-                product.getQuantity(), product.getUserId());
+                product.getQuantity(), product.getUserId(), null);
+    }
+
+    private ProductRes toResponse(Product product, String[] imageUrls) {
+        return new ProductRes(product.getId(), product.getName(), product.getDescription(), product.getPrice(),
+                product.getQuantity(), product.getUserId(), imageUrls);
     }
 }

@@ -9,5 +9,6 @@ public record ProductReq(
         @NotBlank String name,
         @NotBlank String description,
         @NotNull @DecimalMin("0.0") Double price,
-        @NotNull @Min(0) Integer quantity) {
+        @NotNull @Min(0) Integer quantity,
+        String[] imageUrls) {
 }
