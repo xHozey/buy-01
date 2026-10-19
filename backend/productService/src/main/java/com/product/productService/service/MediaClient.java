@@ -8,9 +8,8 @@ import org.springframework.web.client.RestClient;
 public class MediaClient {
     private final RestClient restClient;
 
-    public MediaClient(RestClient.Builder restClientBuilder,
-            @Value("${media.service.url:http://media:8083}") String mediaServiceUrl) {
-        this.restClient = restClientBuilder.baseUrl(mediaServiceUrl).build();
+    public MediaClient(@Value("${media.service.url:http://media:8083}") String mediaServiceUrl) {
+        this.restClient = RestClient.create(mediaServiceUrl);
     }
 
     public String[] getImageUrls(String productId) {
