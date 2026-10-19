@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
@@ -15,6 +18,7 @@ public class MediaService {
     public static final long MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
     private final Cloudinary cloudinary;
+    private final RestClient restClient = RestClient.create();
 
     public MediaService(Cloudinary cloudinary) {
         this.cloudinary = cloudinary;
@@ -42,5 +46,21 @@ public class MediaService {
             throw new IOException("Cloudinary did not return an image URL");
         }
         return secureUrl;
+    }
+
+    public StoredImage fetchImage(String imageUrl) {
+        ResponseEntity<byte[]> response = restClient.get()
+                .uri(imageUrl)
+                .retrieve()
+                .toEntity(byte[].class);
+        byte[] content = response.getBody();
+        if (content == null) {
+            throw new IllegalStateException("Cloudinary returned an empty image");
+        }
+        MediaType contentType = response.getHeaders().getContentType();
+        return new StoredImage(content, contentType == null ? MediaType.APPLICATION_OCTET_STREAM : contentType);
+    }
+
+    public record StoredImage(byte[] content, MediaType contentType) {
     }
 }

@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.media.mediaService.service.MediaService;
+import com.media.mediaService.model.Media;
 import com.media.mediaService.reposiroty.MediaRepository;
 
 @RestController
@@ -36,6 +40,21 @@ public class MediaController {
         return mediaRepository.findByProductId(productId).stream()
             .map(media -> media.getImagePath())
                 .toList();
+    }
+
+    @GetMapping("/images/{id}")
+    public ResponseEntity<byte[]> getImage(@PathVariable String id) {
+        Media media = mediaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found"));
+        try {
+            MediaService.StoredImage image = mediaService.fetchImage(media.getImagePath());
+            return ResponseEntity.ok()
+                    .contentType(image.contentType())
+                    .cacheControl(CacheControl.maxAge(java.time.Duration.ofDays(30)).cachePublic())
+                    .body(image.content());
+        } catch (RestClientException | IllegalStateException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found", exception);
+        }
     }
 
     @PostMapping("/images")
