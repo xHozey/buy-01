@@ -1,0 +1,79 @@
+<main class="min-h-screen bg-[#f4f1eb] p-3 text-slate-900 sm:p-5 lg:p-8">
+	<section class="mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:min-h-[calc(100vh-2.5rem)] lg:grid-cols-[0.9fr_1.1fr]" aria-labelledby="register-title">
+		<div class="relative hidden overflow-hidden bg-[#172a2b] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+			<div class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-400/15 blur-2xl"></div>
+			<div class="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-teal-400/10 blur-3xl"></div>
+			<div class="relative">
+				<a class="text-lg font-black tracking-tight" routerLink="/">buy<span class="text-amber-400">/01</span></a>
+				<p class="mt-24 max-w-sm text-5xl font-semibold leading-[1.05] tracking-tight">Your next<br /><span class="text-amber-300">favorite thing.</span></p>
+				<p class="mt-6 max-w-xs text-sm leading-6 text-slate-300">Create an account to save discoveries, follow sellers, and shop with confidence.</p>
+			</div>
+			<div class="relative grid grid-cols-3 gap-3 text-xs text-slate-300">
+				<div class="border-l border-amber-300/60 pl-3"><strong class="block text-lg text-white">24h</strong>quick dispatch</div>
+				<div class="border-l border-amber-300/60 pl-3"><strong class="block text-lg text-white">4.9/5</strong>customer love</div>
+				<div class="border-l border-amber-300/60 pl-3"><strong class="block text-lg text-white">100%</strong>curated picks</div>
+			</div>
+		</div>
+
+		<div class="flex items-center justify-center px-5 py-8 sm:px-12 lg:px-16">
+			<div class="w-full max-w-md">
+				<div class="mb-8 lg:hidden"><a class="text-lg font-black tracking-tight" routerLink="/">buy<span class="text-amber-500">/01</span></a></div>
+				<div class="mb-7">
+					<p class="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-teal-700">Join the marketplace</p>
+					<h1 id="register-title" class="text-4xl font-semibold tracking-tight text-slate-950">Create account</h1>
+					<p class="mt-3 text-sm leading-6 text-slate-500">A better way to keep track of the things you love.</p>
+				</div>
+
+				@if (errorMessage()) {
+					<p class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{{ errorMessage() }}</p>
+				}
+
+				<form class="flex flex-col gap-3" [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+			<mat-form-field appearance="outline">
+				<mat-label>Name</mat-label>
+				<input matInput type="text" formControlName="name" autocomplete="name" />
+				@if (registerForm.controls.name.hasError('required')) {
+					<mat-error>Name is required.</mat-error>
+				} @else if (registerForm.controls.name.hasError('minlength')) {
+					<mat-error>Name must be at least 3 characters.</mat-error>
+				}
+			</mat-form-field>
+
+			<mat-form-field appearance="outline">
+				<mat-label>Email address</mat-label>
+				<input matInput type="email" formControlName="email" autocomplete="email" />
+				@if (registerForm.controls.email.hasError('required')) {
+					<mat-error>Email is required.</mat-error>
+				} @else if (registerForm.controls.email.hasError('email')) {
+					<mat-error>Enter a valid email address.</mat-error>
+				}
+			</mat-form-field>
+
+			<mat-form-field appearance="outline">
+				<mat-label>Password</mat-label>
+				<input matInput type="password" formControlName="password" autocomplete="new-password" />
+				@if (registerForm.controls.password.hasError('required')) {
+					<mat-error>Password is required.</mat-error>
+				} @else if (registerForm.controls.password.hasError('minlength')) {
+					<mat-error>Password must be at least 6 characters.</mat-error>
+				}
+			</mat-form-field>
+
+			<mat-form-field appearance="outline">
+				<mat-label>Account type</mat-label>
+				<mat-select formControlName="role">
+					<mat-option value="CLIENT">Client</mat-option>
+					<mat-option value="SELLER">Seller</mat-option>
+				</mat-select>
+			</mat-form-field>
+
+			<button mat-flat-button color="primary" class="!mt-2 !h-12 !rounded-xl !text-sm !font-bold" type="submit" [disabled]="isSubmitting()">
+				{{ isSubmitting() ? 'Creating account...' : 'Create account' }}
+			</button>
+				</form>
+
+				<p class="mt-6 text-center text-sm text-slate-500">Already have an account? <a class="font-bold text-teal-700 hover:text-teal-900" routerLink="/login">Sign in</a></p>
+			</div>
+		</div>
+	</section>
+</main>
