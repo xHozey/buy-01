@@ -12,6 +12,14 @@ export interface Product {
   imageUrls: string[];
 }
 
+export interface ProductRequest {
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  imageUrls: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private readonly http = inject(HttpClient);
@@ -19,5 +27,21 @@ export class ProductService {
 
   getProducts(): Observable<Product[]> {
     return this.http.get<Product[]>(this.apiUrl);
+  }
+
+  getMyProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.apiUrl}/mine`);
+  }
+
+  createProduct(request: ProductRequest): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl, request);
+  }
+
+  updateProduct(id: string, request: ProductRequest): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/${id}`, request);
+  }
+
+  deleteProduct(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
