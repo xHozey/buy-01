@@ -1,0 +1,53 @@
+<main class="min-h-screen bg-[#f4f1eb] text-slate-900">
+  <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 sm:px-8" aria-label="Product navigation">
+    <a routerLink="/" class="text-xl font-black tracking-tight">buy<span class="text-teal-700">/01</span></a>
+    <div class="flex items-center gap-3 text-sm font-bold">
+      <a routerLink="/" class="text-slate-600 transition hover:text-teal-700">Browse</a>
+      @if (user(); as currentUser) {
+        @if (currentUser.role === 'SELLER') { <a routerLink="/dashboard" class="text-slate-600 transition hover:text-teal-700">Dashboard</a> }
+        <span class="hidden text-slate-500 sm:inline">Hi, {{ currentUser.name }}</span>
+      } @else {
+        <a routerLink="/login" class="text-slate-600 transition hover:text-teal-700">Sign in</a>
+      }
+    </div>
+  </nav>
+
+  <section class="mx-auto max-w-7xl px-5 pb-20 pt-8 sm:px-8" aria-labelledby="product-title">
+    <a routerLink="/" class="inline-flex items-center gap-2 text-sm font-bold text-teal-800 transition hover:text-teal-950">&larr; Back to products</a>
+
+    @if (isLoading()) {
+      <div class="mt-8 grid gap-10 lg:grid-cols-2"><div class="aspect-square animate-pulse rounded-2xl bg-slate-200"></div><div class="space-y-5"><div class="h-10 animate-pulse rounded bg-slate-200"></div><div class="h-32 animate-pulse rounded bg-slate-200"></div></div></div>
+    } @else if (hasError()) {
+      <div class="mt-8 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-700" role="alert">This product could not be found or is no longer available.</div>
+    } @else if (product(); as currentProduct) {
+      <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-16">
+        <div>
+          <div class="aspect-square overflow-hidden rounded-2xl bg-[#e3e7df]">
+            @if (selectedImage()) { <img [src]="selectedImage()" [alt]="currentProduct.name" class="h-full w-full object-cover" /> } @else { <div class="flex h-full items-center justify-center text-sm text-slate-500">No image available</div> }
+          </div>
+          @if (currentProduct.imageUrls.length > 1) {
+            <div class="mt-4 grid grid-cols-5 gap-3" aria-label="Product images">
+              @for (imageUrl of currentProduct.imageUrls; track imageUrl) {
+                <button type="button" (click)="selectImage(imageUrl)" class="aspect-square overflow-hidden rounded-lg border-2 bg-white" [class.border-teal-700]="selectedImage() === imageUrl" [class.border-transparent]="selectedImage() !== imageUrl">
+                  <img [src]="imageUrl" [alt]="currentProduct.name" class="h-full w-full object-cover" />
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="pt-2 lg:pt-8">
+          <p class="text-xs font-bold uppercase tracking-[0.22em] text-teal-700">Product details</p>
+          <h1 id="product-title" class="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">{{ currentProduct.name }}</h1>
+          <p class="mt-5 text-2xl font-bold text-teal-800">${{ currentProduct.price | number:'1.2-2' }}</p>
+          <div class="my-8 h-px bg-slate-300"></div>
+          <p class="whitespace-pre-line text-base leading-8 text-slate-600">{{ currentProduct.description }}</p>
+          <div class="mt-8 flex items-center gap-3 border-t border-slate-300 pt-6">
+            <span class="h-2.5 w-2.5 rounded-full" [class.bg-teal-600]="currentProduct.quantity > 0" [class.bg-red-500]="currentProduct.quantity === 0"></span>
+            <p class="text-sm font-bold uppercase tracking-wider" [class.text-red-700]="currentProduct.quantity === 0" [class.text-slate-600]="currentProduct.quantity > 0">{{ currentProduct.quantity === 0 ? 'Out of stock' : currentProduct.quantity + ' available' }}</p>
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+</main>
