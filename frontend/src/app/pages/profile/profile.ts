@@ -1,0 +1,106 @@
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { MediaService } from '../../services/media-service';
+import { UserContextService } from '../../services/user-context-service';
+
+@Component({
+  selector: 'app-profile',
+  imports: [ReactiveFormsModule, RouterLink],
+  templateUrl: './profile.html',
+  styleUrl: './profile.css',
+})
+export class Profile implements OnInit {
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly mediaService = inject(MediaService);
+  private readonly router = inject(Router);
+  private readonly userContext = inject(UserContextService);
+  private hasInitializedForm = false;
+
+  readonly user = this.userContext.user;
+  readonly selectedFile = signal<File | null>(null);
+  readonly previewUrl = signal<string | null>(null);
+  readonly isSubmitting = signal(false);
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
+
+  readonly profileForm = this.formBuilder.nonNullable.group({
+    name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(900)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(999)]],
+    password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(260)]],
+  });
+
+  constructor() {
+    effect(() => {
+      const currentUser = this.user();
+      if (currentUser && !this.hasInitializedForm) {
+        this.profileForm.patchValue({ name: currentUser.name, email: currentUser.email });
+        this.hasInitializedForm = true;
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    if (!localStorage.getItem('auth_token')) {
+      this.router.navigateByUrl('/login');
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedFile.set(file);
+    this.previewUrl.set(file ? URL.createObjectURL(file) : null);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+  }
+
+  submit(): void {
+    if (this.profileForm.invalid || this.isSubmitting()) {
+      this.profileForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    const currentUser = this.user();
+    const file = this.selectedFile();
+
+    if (file) {
+      this.mediaService.uploadImage(file).subscribe({
+        next: ({ url }) => this.updateProfile(url),
+        error: () => this.finishWithError('The avatar could not be uploaded. Please try again.'),
+      });
+      return;
+    }
+
+    this.updateProfile(currentUser?.avatar ?? null);
+  }
+
+  logout(): void {
+    this.userContext.logout();
+    this.router.navigateByUrl('/');
+  }
+
+  private updateProfile(avatar: string | null): void {
+    const values = this.profileForm.getRawValue();
+    this.userContext.updateProfile({ ...values, avatar }).subscribe({
+      next: () => {
+        this.profileForm.controls.password.reset();
+        this.selectedFile.set(null);
+        this.previewUrl.set(null);
+        this.successMessage.set('Your profile has been updated.');
+        this.isSubmitting.set(false);
+      },
+      error: (error: { error?: { message?: string } }) => this.finishWithError(
+        error.error?.message ?? 'Your profile could not be updated. Check your password and try again.',
+      ),
+    });
+  }
+
+  private finishWithError(message: string): void {
+    this.errorMessage.set(message);
+    this.isSubmitting.set(false);
+  }
+}

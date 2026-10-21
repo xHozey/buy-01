@@ -5,7 +5,7 @@
             @if (userLoading()) {
                 <span class="h-9 w-24 animate-pulse rounded-full bg-slate-200" aria-label="Loading account"></span>
             } @else if (user(); as currentUser) {
-                <span class="text-slate-600">Hi, {{ currentUser.name }}</span>
+                <a routerLink="/profile" class="text-slate-600 transition hover:text-teal-700">Hi, {{ currentUser.name }}</a>
                 @if (currentUser.role === 'SELLER') {
                     <a routerLink="/dashboard" class="text-slate-600 transition hover:text-teal-700">Dashboard</a>
                 }

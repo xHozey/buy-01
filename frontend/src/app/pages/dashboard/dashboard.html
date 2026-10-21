@@ -4,7 +4,7 @@
     <div class="flex items-center gap-3 text-sm font-bold">
       <a routerLink="/" class="text-slate-600 transition hover:text-teal-700">Browse</a>
       @if (user(); as currentUser) {
-        <span class="hidden text-slate-500 sm:inline">{{ currentUser.name }}</span>
+        <a routerLink="/profile" class="hidden text-slate-500 transition hover:text-teal-700 sm:inline">{{ currentUser.name }}</a>
         <button type="button" (click)="logout()" class="rounded-full border border-slate-300 px-4 py-2 text-slate-700 transition hover:border-teal-700 hover:text-teal-700">Sign out</button>
       }
     </div>

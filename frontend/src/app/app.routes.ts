@@ -4,6 +4,7 @@ import { Register } from './pages/register/register';
 import { Home } from './pages/home/home';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { ProductDetail } from './pages/product-detail/product-detail';
+import { Profile } from './pages/profile/profile';
 
 export const routes: Routes = [
   {
@@ -13,6 +14,10 @@ export const routes: Routes = [
   {
     path: 'register',
     component: Register,
+  },
+  {
+    path: 'profile',
+    component: Profile,
   },
   {
     path: 'products/:id',

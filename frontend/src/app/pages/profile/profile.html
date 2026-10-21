@@ -1,0 +1,59 @@
+<main class="min-h-screen bg-[#f4f1eb] text-slate-900">
+  <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 sm:px-8" aria-label="Profile navigation">
+    <a routerLink="/" class="text-xl font-black tracking-tight">buy<span class="text-teal-700">/01</span></a>
+    <div class="flex items-center gap-3 text-sm font-bold">
+      <a routerLink="/" class="text-slate-600 transition hover:text-teal-700">Browse</a>
+      @if (user(); as currentUser) {
+        @if (currentUser.role === 'SELLER') { <a routerLink="/dashboard" class="text-slate-600 transition hover:text-teal-700">Dashboard</a> }
+        <button type="button" (click)="logout()" class="rounded-full border border-slate-300 px-4 py-2 text-slate-700 transition hover:border-teal-700 hover:text-teal-700">Sign out</button>
+      }
+    </div>
+  </nav>
+
+  <section class="mx-auto max-w-3xl px-5 pb-20 pt-8 sm:px-8" aria-labelledby="profile-title">
+    <div class="mb-10 border-b border-slate-300 pb-8">
+      <p class="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-teal-700">Your account</p>
+      <h1 id="profile-title" class="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">Profile settings</h1>
+      <p class="mt-3 text-sm leading-6 text-slate-600">Update your details and choose the image shown on your account.</p>
+    </div>
+
+    @if (errorMessage()) { <p class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{{ errorMessage() }}</p> }
+    @if (successMessage()) { <p class="mb-6 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800" role="status">{{ successMessage() }}</p> }
+
+    <form [formGroup]="profileForm" (ngSubmit)="submit()" class="rounded-2xl bg-white p-6 shadow-sm sm:p-8" novalidate>
+      <div class="mb-8 flex flex-col items-center gap-5 border-b border-slate-200 pb-8 sm:flex-row">
+        <div class="h-28 w-28 shrink-0 overflow-hidden rounded-full bg-[#dce7df] ring-4 ring-[#f4f1eb]">
+          @if (previewUrl() || user()?.avatar) {
+            <img [src]="previewUrl() || user()?.avatar" alt="Profile avatar" class="h-full w-full object-cover" />
+          } @else {
+            <div class="flex h-full items-center justify-center text-3xl font-bold text-teal-800">{{ user()?.name?.charAt(0) ?? '?' }}</div>
+          }
+        </div>
+        <div>
+          <label for="avatar" class="inline-block cursor-pointer rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-teal-700 hover:text-teal-700">Choose avatar</label>
+          <input id="avatar" type="file" accept="image/*" (change)="onFileSelected($event)" class="sr-only" />
+          <p class="mt-2 text-xs text-slate-500">JPG, PNG, or another image format.</p>
+        </div>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <label class="block text-sm font-bold" for="name">Name
+          <input id="name" formControlName="name" autocomplete="name" class="mt-2 block h-11 w-full rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-teal-700" />
+        </label>
+        <label class="block text-sm font-bold" for="email">Email
+          <input id="email" type="email" formControlName="email" autocomplete="email" class="mt-2 block h-11 w-full rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-teal-700" />
+        </label>
+      </div>
+      @if ((profileForm.controls.name.touched && profileForm.controls.name.invalid) || (profileForm.controls.email.touched && profileForm.controls.email.invalid)) { <p class="mt-2 text-xs text-red-700">Enter a valid name and email address.</p> }
+
+      <div class="mt-5 border-t border-slate-200 pt-5">
+        <label class="block text-sm font-bold" for="password">Current password
+          <input id="password" type="password" formControlName="password" autocomplete="current-password" class="mt-2 block h-11 w-full rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-teal-700" />
+        </label>
+        <p class="mt-2 text-xs text-slate-500">For security, confirm your current password to save profile changes.</p>
+      </div>
+
+      <button type="submit" [disabled]="isSubmitting()" class="mt-8 h-12 w-full rounded-lg bg-[#172a2b] font-bold text-white transition hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60">{{ isSubmitting() ? 'Saving...' : 'Save changes' }}</button>
+    </form>
+  </section>
+</main>

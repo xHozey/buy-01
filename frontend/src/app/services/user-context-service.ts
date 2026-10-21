@@ -40,6 +40,12 @@ export class UserContextService {
     );
   }
 
+  updateProfile(profile: Omit<UserProfile, 'id' | 'role'> & { password: string }): Observable<UserProfile> {
+    return this.http.put<UserProfile>(`${this.apiUrl}/me`, profile).pipe(
+      tap((user) => this.userSignal.set(user)),
+    );
+  }
+
   logout(): void {
     localStorage.removeItem('auth_token');
     this.userSignal.set(null);

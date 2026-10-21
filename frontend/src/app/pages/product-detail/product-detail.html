@@ -5,7 +5,7 @@
       <a routerLink="/" class="text-slate-600 transition hover:text-teal-700">Browse</a>
       @if (user(); as currentUser) {
         @if (currentUser.role === 'SELLER') { <a routerLink="/dashboard" class="text-slate-600 transition hover:text-teal-700">Dashboard</a> }
-        <span class="hidden text-slate-500 sm:inline">Hi, {{ currentUser.name }}</span>
+        <a routerLink="/profile" class="hidden text-slate-500 transition hover:text-teal-700 sm:inline">Hi, {{ currentUser.name }}</a>
       } @else {
         <a routerLink="/login" class="text-slate-600 transition hover:text-teal-700">Sign in</a>
       }
