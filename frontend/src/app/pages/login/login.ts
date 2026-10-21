@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, loginReq } from '../../services/auth-service';
+import { UserContextService } from '../../services/user-context-service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { AuthService, loginReq } from '../../services/auth-service';
 export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private userContext = inject(UserContextService);
   private router = inject(Router);
 
   readonly loginForm = this.fb.nonNullable.group({
@@ -37,7 +39,7 @@ export class Login {
     this.authService.login(request).subscribe({
       next: ({ token }) => {
         this.authService.saveToken(token);
-        this.router.navigateByUrl('/');
+        this.userContext.load().subscribe(() => this.router.navigateByUrl('/'));
       },
       error: (error: { error?: { message?: string } }) => {
         this.errorMessage.set(error.error?.message ?? 'Unable to sign in. Check your details and try again.');
