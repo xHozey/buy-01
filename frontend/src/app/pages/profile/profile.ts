@@ -4,6 +4,9 @@ import { Router, RouterLink } from '@angular/router';
 import { MediaService } from '../../services/media-service';
 import { UserContextService } from '../../services/user-context-service';
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png']);
+
 @Component({
   selector: 'app-profile',
   imports: [ReactiveFormsModule, RouterLink],
@@ -49,6 +52,15 @@ export class Profile implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+
+    if (file && (file.size > MAX_IMAGE_SIZE || !ACCEPTED_IMAGE_TYPES.has(file.type))) {
+      input.value = '';
+      this.clearSelectedFile();
+      this.errorMessage.set(`${file.name} must be a JPG, JPEG, or PNG image no larger than 2 MB.`);
+      return;
+    }
+
+    this.clearSelectedFile();
     this.selectedFile.set(file);
     this.previewUrl.set(file ? URL.createObjectURL(file) : null);
     this.errorMessage.set('');
@@ -88,8 +100,7 @@ export class Profile implements OnInit {
     this.userContext.updateProfile({ ...values, avatar }).subscribe({
       next: () => {
         this.profileForm.controls.password.reset();
-        this.selectedFile.set(null);
-        this.previewUrl.set(null);
+        this.clearSelectedFile();
         this.successMessage.set('Your profile has been updated.');
         this.isSubmitting.set(false);
       },
@@ -102,5 +113,14 @@ export class Profile implements OnInit {
   private finishWithError(message: string): void {
     this.errorMessage.set(message);
     this.isSubmitting.set(false);
+  }
+
+  private clearSelectedFile(): void {
+    const previewUrl = this.previewUrl();
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    this.selectedFile.set(null);
+    this.previewUrl.set(null);
   }
 }

@@ -11,6 +11,9 @@ interface ImagePreview {
   url: string;
 }
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png']);
+
 @Component({
   selector: 'app-dashboard',
   imports: [DecimalPipe, ReactiveFormsModule, RouterLink],
@@ -70,7 +73,22 @@ export class Dashboard implements OnDestroy, OnInit {
 
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.setSelectedFiles(input.files ? Array.from(input.files) : []);
+    const files = input.files ? Array.from(input.files) : [];
+    const invalidFile = files.find(
+      (file) => file.size > MAX_IMAGE_SIZE || !ACCEPTED_IMAGE_TYPES.has(file.type),
+    );
+
+    if (invalidFile) {
+      this.setSelectedFiles([]);
+      input.value = '';
+      this.errorMessage.set(
+        `${invalidFile.name} must be a JPG, JPEG, or PNG image no larger than 2 MB.`,
+      );
+      return;
+    }
+
+    this.errorMessage.set('');
+    this.setSelectedFiles(files);
   }
 
   removeSelectedFile(index: number): void {

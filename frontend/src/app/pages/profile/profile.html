@@ -31,8 +31,8 @@
         </div>
         <div>
           <label for="avatar" class="inline-block cursor-pointer rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-teal-700 hover:text-teal-700">Choose avatar</label>
-          <input id="avatar" type="file" accept="image/*" (change)="onFileSelected($event)" class="sr-only" />
-          <p class="mt-2 text-xs text-slate-500">JPG, PNG, or another image format.</p>
+          <input id="avatar" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" (change)="onFileSelected($event)" class="sr-only" />
+          <p class="mt-2 text-xs text-slate-500">JPG, JPEG, or PNG only, up to 2 MB.</p>
         </div>
       </div>
 

@@ -1,8 +1,13 @@
 package com.media.mediaService.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +21,8 @@ import com.cloudinary.utils.ObjectUtils;
 @Service
 public class MediaService {
     public static final long MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+    private static final String JPEG_CONTENT_TYPE = "image/jpeg";
+    private static final String PNG_CONTENT_TYPE = "image/png";
 
     private final Cloudinary cloudinary;
     private final RestClient restClient = RestClient.create();
@@ -31,8 +38,8 @@ public class MediaService {
         if (file.getSize() > MAX_IMAGE_SIZE) {
             throw new IllegalArgumentException("Image file must be at most 2 MB");
         }
-        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
-            throw new IllegalArgumentException("Only image files are supported");
+        if (!isSupportedContentType(file.getContentType()) || !isSupportedImageFormat(file)) {
+            throw new IllegalArgumentException("Only JPG, JPEG, and PNG images are supported");
         }
 
         Map<?, ?> result = cloudinary.uploader().upload(
@@ -46,6 +53,32 @@ public class MediaService {
             throw new IOException("Cloudinary did not return an image URL");
         }
         return secureUrl;
+    }
+
+    private boolean isSupportedContentType(String contentType) {
+        return JPEG_CONTENT_TYPE.equalsIgnoreCase(contentType) || PNG_CONTENT_TYPE.equalsIgnoreCase(contentType);
+    }
+
+    private boolean isSupportedImageFormat(MultipartFile file) throws IOException {
+        try (InputStream input = file.getInputStream();
+                ImageInputStream imageInput = ImageIO.createImageInputStream(input)) {
+            if (imageInput == null) {
+                return false;
+            }
+
+            var readers = ImageIO.getImageReaders(imageInput);
+            if (!readers.hasNext()) {
+                return false;
+            }
+
+            ImageReader reader = readers.next();
+            try {
+                String format = reader.getFormatName();
+                return "JPEG".equalsIgnoreCase(format) || "PNG".equalsIgnoreCase(format);
+            } finally {
+                reader.dispose();
+            }
+        }
     }
 
     public StoredImage fetchImage(String imageUrl) {
