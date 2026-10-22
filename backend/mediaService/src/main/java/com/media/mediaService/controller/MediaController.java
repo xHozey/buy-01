@@ -60,7 +60,7 @@ public class MediaController {
     @PostMapping("/images")
     public Map<String, String> uploadImage(@RequestPart("file") MultipartFile file,
             Authentication authentication) {
-        requireAuthenticated(authentication);
+        requireSeller(authentication);
         try {
             String url = mediaService.uploadImage(file);
             return Map.of("id", url, "url", url);
@@ -98,12 +98,6 @@ public class MediaController {
                         || authority.getAuthority().equals("SELLER"));
         if (!seller) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller role required");
-        }
-    }
-
-    private void requireAuthenticated(Authentication authentication) {
-        if (!isAuthenticated(authentication)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
     }
 
