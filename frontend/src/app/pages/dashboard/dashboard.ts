@@ -30,6 +30,7 @@ export class Dashboard implements OnDestroy, OnInit {
   readonly products = signal<Product[]>([]);
   readonly selectedFiles = signal<File[]>([]);
   readonly imagePreviews = signal<ImagePreview[]>([]);
+  readonly existingImageUrls = signal<string[]>([]);
   readonly editingProduct = signal<Product | null>(null);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
@@ -80,6 +81,12 @@ export class Dashboard implements OnDestroy, OnInit {
     }
   }
 
+  removeExistingImage(index: number): void {
+    this.existingImageUrls.update((imageUrls) =>
+      imageUrls.filter((_, imageIndex) => imageIndex !== index),
+    );
+  }
+
   editProduct(product: Product): void {
     this.editingProduct.set(product);
     this.productForm.setValue({
@@ -89,6 +96,7 @@ export class Dashboard implements OnDestroy, OnInit {
       quantity: product.quantity,
     });
     this.clearSelectedFiles();
+    this.existingImageUrls.set([...product.imageUrls]);
     this.errorMessage.set('');
     this.successMessage.set('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -98,6 +106,7 @@ export class Dashboard implements OnDestroy, OnInit {
     this.editingProduct.set(null);
     this.productForm.reset({ name: '', description: '', price: 0, quantity: 0 });
     this.clearSelectedFiles();
+    this.existingImageUrls.set([]);
     this.errorMessage.set('');
   }
 
@@ -112,18 +121,18 @@ export class Dashboard implements OnDestroy, OnInit {
     this.successMessage.set('');
     const product = this.editingProduct();
     const files = this.selectedFiles();
-    const imageUrls = product?.imageUrls ?? [];
+    const existingImageUrls = this.existingImageUrls();
     const upload$ = files.length ? this.mediaService.uploadImages(files) : null;
 
     if (upload$) {
       upload$.subscribe({
-        next: ({ urls }) => this.saveProduct({ imageUrls: urls }, product),
+        next: ({ urls }) => this.saveProduct({ imageUrls: [...existingImageUrls, ...urls] }, product),
         error: () => this.finishWithError('Images could not be uploaded. Please try again.'),
       });
       return;
     }
 
-    this.saveProduct({ imageUrls }, product);
+    this.saveProduct({ imageUrls: existingImageUrls }, product);
   }
 
   deleteProduct(product: Product): void {
@@ -150,10 +159,7 @@ export class Dashboard implements OnDestroy, OnInit {
 
   private saveProduct(upload: { imageUrls: string[] }, product: Product | null): void {
     const values = this.productForm.getRawValue();
-    const request: ProductRequest = {
-      ...values,
-      imageUrls: product && !this.selectedFiles().length ? product.imageUrls : upload.imageUrls,
-    };
+    const request: ProductRequest = { ...values, imageUrls: upload.imageUrls };
     const save$ = product
       ? this.productService.updateProduct(product.id, request)
       : this.productService.createProduct(request);
