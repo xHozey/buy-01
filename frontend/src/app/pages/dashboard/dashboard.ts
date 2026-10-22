@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { MediaService } from '../../services/media-service';
 import { Product, ProductRequest, ProductService } from '../../services/product-service';
@@ -23,6 +24,7 @@ const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png']);
 export class Dashboard implements OnDestroy, OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly mediaService = inject(MediaService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly productService = inject(ProductService);
   private readonly router = inject(Router);
   private readonly userContext = inject(UserContextService);
@@ -81,7 +83,7 @@ export class Dashboard implements OnDestroy, OnInit {
     if (invalidFile) {
       this.setSelectedFiles([]);
       input.value = '';
-      this.errorMessage.set(
+      this.showError(
         `${invalidFile.name} must be a JPG, JPEG, or PNG image no larger than 2 MB.`,
       );
       return;
@@ -145,7 +147,10 @@ export class Dashboard implements OnDestroy, OnInit {
     if (upload$) {
       upload$.subscribe({
         next: ({ urls }) => this.saveProduct({ imageUrls: [...existingImageUrls, ...urls] }, product),
-        error: () => this.finishWithError('Images could not be uploaded. Please try again.'),
+        error: (error: { error?: { message?: string } }) => this.finishWithError(
+          error.error?.message ?? 'Images could not be uploaded. Please try again.',
+          true,
+        ),
       });
       return;
     }
@@ -166,7 +171,12 @@ export class Dashboard implements OnDestroy, OnInit {
           this.cancelEdit();
         }
       },
-      error: () => this.errorMessage.set('This product could not be deleted. Please try again.'),
+      error: (error: { status?: number; error?: { message?: string } }) => {
+        const message = error.status === 403
+          ? 'You are not allowed to delete this product.'
+          : error.error?.message ?? 'This product could not be deleted. Please try again.';
+        this.showError(message);
+      },
     });
   }
 
@@ -200,9 +210,17 @@ export class Dashboard implements OnDestroy, OnInit {
     });
   }
 
-  private finishWithError(message: string): void {
+  private finishWithError(message: string, showToast = true): void {
+    if (showToast) {
+      this.snackBar.open(message, 'Dismiss', { duration: 5000, panelClass: ['error-snackbar'] });
+    }
     this.errorMessage.set(message);
     this.isSubmitting.set(false);
+  }
+
+  private showError(message: string): void {
+    this.errorMessage.set(message);
+    this.snackBar.open(message, 'Dismiss', { duration: 5000, panelClass: ['error-snackbar'] });
   }
 
   private setSelectedFiles(files: File[]): void {

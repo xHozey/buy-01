@@ -1,5 +1,6 @@
 import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { MediaService } from '../../services/media-service';
 import { UserContextService } from '../../services/user-context-service';
@@ -16,6 +17,7 @@ const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png']);
 export class Profile implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly mediaService = inject(MediaService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly userContext = inject(UserContextService);
   private hasInitializedForm = false;
@@ -56,7 +58,7 @@ export class Profile implements OnInit {
     if (file && (file.size > MAX_IMAGE_SIZE || !ACCEPTED_IMAGE_TYPES.has(file.type))) {
       input.value = '';
       this.clearSelectedFile();
-      this.errorMessage.set(`${file.name} must be a JPG, JPEG, or PNG image no larger than 2 MB.`);
+      this.showError(`${file.name} must be a JPG, JPEG, or PNG image no larger than 2 MB.`);
       return;
     }
 
@@ -82,7 +84,10 @@ export class Profile implements OnInit {
     if (file) {
       this.mediaService.uploadImage(file).subscribe({
         next: ({ url }) => this.updateProfile(url),
-        error: () => this.finishWithError('The avatar could not be uploaded. Please try again.'),
+        error: (error: { error?: { message?: string } }) => this.finishWithError(
+          error.error?.message ?? 'The avatar could not be uploaded. Please try again.',
+          true,
+        ),
       });
       return;
     }
@@ -110,9 +115,17 @@ export class Profile implements OnInit {
     });
   }
 
-  private finishWithError(message: string): void {
+  private finishWithError(message: string, showToast = true): void {
+    if (showToast) {
+      this.snackBar.open(message, 'Dismiss', { duration: 5000, panelClass: ['error-snackbar'] });
+    }
     this.errorMessage.set(message);
     this.isSubmitting.set(false);
+  }
+
+  private showError(message: string): void {
+    this.errorMessage.set(message);
+    this.snackBar.open(message, 'Dismiss', { duration: 5000, panelClass: ['error-snackbar'] });
   }
 
   private clearSelectedFile(): void {

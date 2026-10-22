@@ -89,7 +89,8 @@ public class ProductService {
     }
 
     private void requireSeller(Authentication authentication) {
-        boolean seller = authentication.getAuthorities().stream()
+        boolean seller = authentication != null && authentication.isAuthenticated()
+            && authentication.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_SELLER")
                         || authority.getAuthority().equals("SELLER"));
         if (!seller) {

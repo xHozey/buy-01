@@ -54,20 +54,35 @@
         <label class="block text-sm font-bold" for="name">Name
           <input id="name" formControlName="name" autocomplete="name"
             class="mt-2 block h-11 w-full rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-teal-700" />
+          @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('required')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Name is required.</span> }
+          @else if (profileForm.controls.name.touched && profileForm.controls.name.hasError('minlength')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Name must be at least 3 characters.</span> }
+          @else if (profileForm.controls.name.touched && profileForm.controls.name.hasError('maxlength')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Name must be 900 characters or fewer.</span> }
         </label>
         <label class="block text-sm font-bold" for="email">Email
           <input id="email" type="email" formControlName="email" autocomplete="email"
             class="mt-2 block h-11 w-full rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-teal-700" />
+          @if (profileForm.controls.email.touched && profileForm.controls.email.hasError('required')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Email is required.</span> }
+          @else if (profileForm.controls.email.touched && profileForm.controls.email.hasError('email')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Enter a valid email address.</span> }
+          @else if (profileForm.controls.email.touched && profileForm.controls.email.hasError('maxlength')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Email must be 999 characters or fewer.</span> }
         </label>
       </div>
-      @if ((profileForm.controls.name.touched && profileForm.controls.name.invalid) ||
-      (profileForm.controls.email.touched && profileForm.controls.email.invalid)) { <p
-        class="mt-2 text-xs text-red-700">Enter a valid name and email address.</p> }
 
       <div class="mt-5 border-t border-slate-200 pt-5">
         <label class="block text-sm font-bold" for="password">Current password
           <input id="password" type="password" formControlName="password" autocomplete="current-password"
             class="mt-2 block h-11 w-full rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-teal-700" />
+          @if (profileForm.controls.password.touched && profileForm.controls.password.hasError('required')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Current password is required.</span> }
+          @else if (profileForm.controls.password.touched && profileForm.controls.password.hasError('minlength')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Password must be at least 6 characters.</span> }
+          @else if (profileForm.controls.password.touched && profileForm.controls.password.hasError('maxlength')) { <span
+            class="mt-1 block text-xs font-normal text-red-700">Password must be 260 characters or fewer.</span> }
         </label>
         <p class="mt-2 text-xs text-slate-500">For security, confirm your current password to save profile changes.</p>
       </div>
