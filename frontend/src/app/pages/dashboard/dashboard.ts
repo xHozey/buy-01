@@ -1,10 +1,15 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MediaService } from '../../services/media-service';
 import { Product, ProductRequest, ProductService } from '../../services/product-service';
 import { UserContextService } from '../../services/user-context-service';
+
+interface ImagePreview {
+  file: File;
+  url: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -12,16 +17,19 @@ import { UserContextService } from '../../services/user-context-service';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnDestroy, OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly mediaService = inject(MediaService);
   private readonly productService = inject(ProductService);
   private readonly router = inject(Router);
   private readonly userContext = inject(UserContextService);
 
+  @ViewChild('productImagesInput') private productImagesInput?: ElementRef<HTMLInputElement>;
+
   readonly user = this.userContext.user;
   readonly products = signal<Product[]>([]);
   readonly selectedFiles = signal<File[]>([]);
+  readonly imagePreviews = signal<ImagePreview[]>([]);
   readonly editingProduct = signal<Product | null>(null);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
@@ -31,12 +39,16 @@ export class Dashboard implements OnInit {
   readonly productForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
     description: ['', [Validators.required, Validators.maxLength(2000)]],
-    price: [0, [Validators.required, Validators.min(0)]],
+    price: [0, [Validators.required, Validators.min(0.1)]],
     quantity: [0, [Validators.required, Validators.min(0)]],
   });
 
   ngOnInit(): void {
     this.loadProducts();
+  }
+
+  ngOnDestroy(): void {
+    this.revokePreviewUrls();
   }
 
   loadProducts(): void {
@@ -47,7 +59,9 @@ export class Dashboard implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Your products could not be loaded. Make sure you are signed in as a seller.');
+        this.errorMessage.set(
+          'Your products could not be loaded. Make sure you are signed in as a seller.',
+        );
         this.isLoading.set(false);
       },
     });
@@ -55,7 +69,15 @@ export class Dashboard implements OnInit {
 
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFiles.set(input.files ? Array.from(input.files) : []);
+    this.setSelectedFiles(input.files ? Array.from(input.files) : []);
+  }
+
+  removeSelectedFile(index: number): void {
+    const files = this.selectedFiles().filter((_, fileIndex) => fileIndex !== index);
+    this.setSelectedFiles(files);
+    if (this.productImagesInput) {
+      this.productImagesInput.nativeElement.value = '';
+    }
   }
 
   editProduct(product: Product): void {
@@ -66,7 +88,7 @@ export class Dashboard implements OnInit {
       price: product.price,
       quantity: product.quantity,
     });
-    this.selectedFiles.set([]);
+    this.clearSelectedFiles();
     this.errorMessage.set('');
     this.successMessage.set('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -75,7 +97,7 @@ export class Dashboard implements OnInit {
   cancelEdit(): void {
     this.editingProduct.set(null);
     this.productForm.reset({ name: '', description: '', price: 0, quantity: 0 });
-    this.selectedFiles.set([]);
+    this.clearSelectedFiles();
     this.errorMessage.set('');
   }
 
@@ -128,26 +150,52 @@ export class Dashboard implements OnInit {
 
   private saveProduct(upload: { imageUrls: string[] }, product: Product | null): void {
     const values = this.productForm.getRawValue();
-    const request: ProductRequest = { ...values, imageUrls: product && !this.selectedFiles().length ? product.imageUrls : upload.imageUrls };
+    const request: ProductRequest = {
+      ...values,
+      imageUrls: product && !this.selectedFiles().length ? product.imageUrls : upload.imageUrls,
+    };
     const save$ = product
       ? this.productService.updateProduct(product.id, request)
       : this.productService.createProduct(request);
 
     save$.subscribe({
       next: (savedProduct) => {
-        this.products.update((products) => product
-          ? products.map((item) => item.id === savedProduct.id ? savedProduct : item)
-          : [savedProduct, ...products]);
+        this.products.update((products) =>
+          product
+            ? products.map((item) => (item.id === savedProduct.id ? savedProduct : item))
+            : [savedProduct, ...products],
+        );
         this.successMessage.set(product ? 'Product updated.' : 'Product created.');
         this.cancelEdit();
         this.isSubmitting.set(false);
       },
-      error: () => this.finishWithError('The product could not be saved. Please check the details and try again.'),
+      error: () =>
+        this.finishWithError(
+          'The product could not be saved. Please check the details and try again.',
+        ),
     });
   }
 
   private finishWithError(message: string): void {
     this.errorMessage.set(message);
     this.isSubmitting.set(false);
+  }
+
+  private setSelectedFiles(files: File[]): void {
+    this.revokePreviewUrls();
+    this.selectedFiles.set(files);
+    this.imagePreviews.set(files.map((file) => ({ file, url: URL.createObjectURL(file) })));
+  }
+
+  private clearSelectedFiles(): void {
+    this.setSelectedFiles([]);
+    if (this.productImagesInput) {
+      this.productImagesInput.nativeElement.value = '';
+    }
+  }
+
+  private revokePreviewUrls(): void {
+    this.imagePreviews().forEach(({ url }) => URL.revokeObjectURL(url));
+    this.imagePreviews.set([]);
   }
 }

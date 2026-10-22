@@ -57,9 +57,19 @@
           </div>
 
           <label class="block text-sm font-bold" for="product-images">Images
-            <input id="product-images" type="file" accept="image/*" multiple (change)="onFilesSelected($event)" class="mt-2 block w-full text-sm font-normal text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-300 file:px-3 file:py-2 file:font-bold file:text-slate-950" />
+            <input #productImagesInput id="product-images" type="file" accept="image/*" multiple (change)="onFilesSelected($event)" class="mt-2 block w-full text-sm font-normal text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-300 file:px-3 file:py-2 file:font-bold file:text-slate-950" />
           </label>
           <p class="text-xs text-slate-400">{{ selectedFiles().length ? selectedFiles().length + ' image(s) ready to upload' : editingProduct() ? 'Leave empty to keep current images.' : 'Add one or more product images.' }}</p>
+          @if (imagePreviews().length) {
+            <div class="grid grid-cols-3 gap-3 pt-2" aria-label="Selected image previews">
+              @for (preview of imagePreviews(); track preview.url; let index = $index) {
+                <div class="relative aspect-square overflow-hidden rounded-lg border border-white/15 bg-white/10">
+                  <img [src]="preview.url" [alt]="preview.file.name" class="h-full w-full object-cover" />
+                  <button type="button" (click)="removeSelectedFile(index)" [attr.aria-label]="'Remove ' + preview.file.name" class="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-950/80 text-lg leading-none text-white transition hover:bg-red-700">&times;</button>
+                </div>
+              }
+            </div>
+          }
 
           <button type="submit" [disabled]="isSubmitting()" class="h-12 w-full rounded-lg bg-amber-300 font-bold text-slate-950 transition hover:bg-amber-200 disabled:cursor-wait disabled:opacity-60">
             {{ isSubmitting() ? 'Saving...' : editingProduct() ? 'Update product' : 'Publish product' }}
