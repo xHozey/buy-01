@@ -2,20 +2,17 @@ package com.media.mediaService.service;
 
 import java.util.Arrays;
 
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.media.mediaService.model.Media;
 import com.media.mediaService.reposiroty.MediaRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
-
 @Service
 public class ProductEventConsumer {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProductEventConsumer.class);
     private final ObjectMapper objectMapper;
     private final MediaRepository mediaRepository;
 
@@ -37,7 +34,6 @@ public class ProductEventConsumer {
         mediaRepository.saveAll(Arrays.stream(product.imageUrls())
             .map(imageUrl -> new Media(null, imageUrl, product.productId()))
                 .toList());
-        logger.info("Saved {} media entries for product {}", product.imageUrls().length, product.productId());
     }
 
     private record ProductEvent(String operation, String productId, String[] imageUrls) {
