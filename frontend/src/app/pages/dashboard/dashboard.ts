@@ -13,6 +13,7 @@ interface ImagePreview {
 }
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const MAX_PRODUCT_IMAGES = 5;
 const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png']);
 
 @Component({
@@ -43,8 +44,8 @@ export class Dashboard implements OnDestroy, OnInit {
   readonly successMessage = signal('');
 
   readonly productForm = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(120)]],
-    description: ['', [Validators.required, Validators.maxLength(2000)]],
+    name: ['', [Validators.required, Validators.maxLength(500)]],
+    description: ['', [Validators.required, Validators.maxLength(500)]],
     price: [0, [Validators.required, Validators.min(0.1)]],
     quantity: [0, [Validators.required, Validators.min(0)]],
   });
@@ -86,6 +87,13 @@ export class Dashboard implements OnDestroy, OnInit {
       this.showError(
         `${invalidFile.name} must be a JPG, JPEG, or PNG image no larger than 2 MB.`,
       );
+      return;
+    }
+
+    if (files.length + this.existingImageUrls().length > MAX_PRODUCT_IMAGES) {
+      this.setSelectedFiles([]);
+      input.value = '';
+      this.showError('A product can have a maximum of 5 images.');
       return;
     }
 
@@ -142,6 +150,11 @@ export class Dashboard implements OnDestroy, OnInit {
     const product = this.editingProduct();
     const files = this.selectedFiles();
     const existingImageUrls = this.existingImageUrls();
+    if (files.length + existingImageUrls.length > MAX_PRODUCT_IMAGES) {
+      this.showError('A product can have a maximum of 5 images.');
+      this.isSubmitting.set(false);
+      return;
+    }
     const upload$ = files.length ? this.mediaService.uploadImages(files) : null;
 
     if (upload$) {

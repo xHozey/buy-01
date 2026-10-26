@@ -4,14 +4,14 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.product.productService.config.ProductTopic;
+import com.product.productService.dto.ProductEvent;
 import com.product.productService.dto.ProductReq;
 import com.product.productService.dto.ProductRes;
-import com.product.productService.dto.ProductEvent;
-import com.product.productService.config.ProductTopic;
 import com.product.productService.model.Product;
 import com.product.productService.reposiroty.ProductRepository;
 
@@ -20,6 +20,8 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class ProductService {
+    private static final int MAX_IMAGE_URL_LENGTH = 500;
+
     private final ProductRepository productRepository;
     private final KafkaTemplate<String, ProductEvent> kafkaTemplate;
     private final MediaClient mediaClient;
@@ -43,6 +45,7 @@ public class ProductService {
 
     public ProductRes create(ProductReq req, Authentication authentication) {
         requireSeller(authentication);
+        validateImageUrls(req.imageUrls());
 
         Product product = new Product(null, req.name(), req.description(), req.price(), req.quantity(),
                 authentication.getName());
@@ -58,6 +61,7 @@ public class ProductService {
 
     public ProductRes update(String productId, ProductReq req, Authentication authentication) {
         Product product = findOwnedProduct(productId, authentication);
+        validateImageUrls(req.imageUrls());
 
         product.setName(req.name());
         product.setDescription(req.description());
@@ -86,6 +90,14 @@ public class ProductService {
     private Product findProduct(String productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+    }
+
+    private void validateImageUrls(String[] imageUrls) {
+        if (imageUrls != null && java.util.Arrays.stream(imageUrls)
+                .anyMatch(imageUrl -> imageUrl == null || imageUrl.length() > MAX_IMAGE_URL_LENGTH)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Each image URL must be 500 characters or fewer");
+        }
     }
 
     private void requireSeller(Authentication authentication) {

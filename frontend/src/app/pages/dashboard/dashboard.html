@@ -54,23 +54,25 @@
 
           <label class="block text-sm font-bold" for="product-name">Name
             <input id="product-name" formControlName="name"
+              maxlength="500"
               class="mt-2 block h-11 w-full rounded-lg border border-white/15 bg-white/10 px-3 font-normal outline-none placeholder:text-slate-400 focus:border-amber-300"
               placeholder="e.g. Linen weekend bag" />
           </label>
           @if (productForm.controls.name.touched && productForm.controls.name.hasError('required')) { <p
             class="text-xs text-red-300">Name is required.</p> }
           @if (productForm.controls.name.touched && productForm.controls.name.hasError('maxlength')) { <p
-            class="text-xs text-red-300">Name must be 120 characters or fewer.</p> }
+            class="text-xs text-red-300">Name must be 500 characters or fewer.</p> }
 
           <label class="block text-sm font-bold" for="product-description">Description
             <textarea id="product-description" formControlName="description" rows="4"
+              maxlength="500"
               class="mt-2 block w-full rounded-lg border border-white/15 bg-white/10 px-3 py-3 font-normal outline-none placeholder:text-slate-400 focus:border-amber-300"
               placeholder="Tell customers what makes it special"></textarea>
           </label>
           @if (productForm.controls.description.touched && productForm.controls.description.hasError('required')) { <p
             class="text-xs text-red-300">Description is required.</p> }
           @if (productForm.controls.description.touched && productForm.controls.description.hasError('maxlength')) { <p
-            class="text-xs text-red-300">Description must be 2,000 characters or fewer.</p> }
+            class="text-xs text-red-300">Description must be 500 characters or fewer.</p> }
 
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -102,7 +104,7 @@
           </label>
           <p class="text-xs text-slate-400">{{ selectedFiles().length ? selectedFiles().length + ' new image(s) ready to
             upload' : editingProduct() ? 'Add images or remove existing ones before saving.' : 'Add one or more product
-            images.' }} JPG, JPEG, or PNG only, up to 2 MB each.</p>
+            images.' }} Up to 5 images total, JPG, JPEG, or PNG only, up to 2 MB each.</p>
           @if (existingImageUrls().length || imagePreviews().length) {
           <div class="grid grid-cols-3 gap-3 pt-2" aria-label="Product image previews">
             @for (imageUrl of existingImageUrls(); track imageUrl; let index = $index) {

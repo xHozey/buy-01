@@ -9,23 +9,24 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.media.mediaService.service.MediaService;
 import com.media.mediaService.model.Media;
 import com.media.mediaService.reposiroty.MediaRepository;
+import com.media.mediaService.service.MediaService;
 
 @RestController
 @RequestMapping("/api/v1/media")
 public class MediaController {
+    private static final int MAX_IMAGES_PER_UPLOAD = 5;
 
     private final MediaService mediaService;
     private final MediaRepository mediaRepository;
@@ -77,6 +78,10 @@ public class MediaController {
         requireSeller(authentication);
         if (files.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one image is required");
+        }
+        if (files.size() > MAX_IMAGES_PER_UPLOAD) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "You can upload a maximum of 5 images per product");
         }
 
         List<String> urls = new ArrayList<>();
