@@ -19,8 +19,8 @@ import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -54,6 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Claims claims = jwtUtil.extractClaims(token);
             String subject = claims.getSubject();
             String role = claims.get("role", String.class);
+                String authority = role == null || role.isBlank()
+                    ? null
+                    : role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
             if (subject == null || subject.isBlank()) {
                 filterChain.doFilter(request, response);
@@ -63,15 +66,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     subject,
                     null,
-                    role == null
+                        authority == null
                             ? java.util.List.of()
-                            : java.util.List.of(new SimpleGrantedAuthority(role)));
+                            : java.util.List.of(new SimpleGrantedAuthority(authority)));
 
             authentication.setDetails(
                     new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(new IdentityRequestWrapper(request, subject, role), response);
+            filterChain.doFilter(new IdentityRequestWrapper(request, subject, authority), response);
             return;
         } catch (JwtException | IllegalArgumentException e) {
             SecurityContextHolder.clearContext();

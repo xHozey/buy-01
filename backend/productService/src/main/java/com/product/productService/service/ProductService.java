@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,8 +32,8 @@ public class ProductService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     public List<ProductRes> getMine(Authentication authentication) {
-        requireSeller(authentication);
         return productRepository.findAllByUserId(authentication.getName()).stream()
                 .map(product -> toResponse(product, mediaClient.getImageUrls(product.getId())))
                 .toList();
@@ -43,8 +44,8 @@ public class ProductService {
         return toResponse(product, mediaClient.getImageUrls(product.getId()));
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     public ProductRes create(ProductReq req, Authentication authentication) {
-        requireSeller(authentication);
         validateImageUrls(req.imageUrls());
 
         Product product = new Product(null, req.name(), req.description(), req.price(), req.quantity(),
@@ -59,6 +60,7 @@ public class ProductService {
         kafkaTemplate.send(ProductTopic.NAME, productEvent.productId(), productEvent);
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     public ProductRes update(String productId, ProductReq req, Authentication authentication) {
         Product product = findOwnedProduct(productId, authentication);
         validateImageUrls(req.imageUrls());
@@ -72,6 +74,7 @@ public class ProductService {
         return toResponse(savedProduct, req.imageUrls());
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     public void delete(String productId, Authentication authentication) {
         Product product = findOwnedProduct(productId, authentication);
         productRepository.delete(product);
@@ -79,7 +82,6 @@ public class ProductService {
     }
 
     private Product findOwnedProduct(String productId, Authentication authentication) {
-        requireSeller(authentication);
         Product product = findProduct(productId);
         if (!authentication.getName().equals(product.getUserId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this product");
@@ -97,16 +99,6 @@ public class ProductService {
                 .anyMatch(imageUrl -> imageUrl == null || imageUrl.length() > MAX_IMAGE_URL_LENGTH)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Each image URL must be 500 characters or fewer");
-        }
-    }
-
-    private void requireSeller(Authentication authentication) {
-        boolean seller = authentication != null && authentication.isAuthenticated()
-            && authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_SELLER")
-                        || authority.getAuthority().equals("SELLER"));
-        if (!seller) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller role required");
         }
     }
 

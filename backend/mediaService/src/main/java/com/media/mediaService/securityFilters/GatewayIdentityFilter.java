@@ -30,15 +30,18 @@ public class GatewayIdentityFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
         String userId = request.getHeader(USER_ID_HEADER);
         String role = request.getHeader(USER_ROLE_HEADER);
+        String authority = role == null || role.isBlank()
+            ? null
+            : role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
         if (userId != null && !userId.isBlank()) {
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(
                             userId,
                             null,
-                            role == null || role.isBlank()
+                                authority == null
                                     ? java.util.List.of()
-                                    : java.util.List.of(new SimpleGrantedAuthority(role))));
+                                    : java.util.List.of(new SimpleGrantedAuthority(authority))));
         }
 
         filterChain.doFilter(request, response);

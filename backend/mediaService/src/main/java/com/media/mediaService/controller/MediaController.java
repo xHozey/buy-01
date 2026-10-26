@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,9 +60,9 @@ public class MediaController {
     }
 
     @PostMapping("/images")
+    @PreAuthorize("hasRole('SELLER')")
     public Map<String, String> uploadImage(@RequestPart("file") MultipartFile file,
             Authentication authentication) {
-        requireSeller(authentication);
         try {
             String url = mediaService.uploadImage(file);
             return Map.of("id", url, "url", url);
@@ -73,9 +74,9 @@ public class MediaController {
     }
 
     @PostMapping("/upload/multiple")
+    @PreAuthorize("hasRole('SELLER')")
     public Map<String, List<String>> uploadImages(@RequestPart("files") List<MultipartFile> files,
             Authentication authentication) {
-        requireSeller(authentication);
         if (files.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one image is required");
         }
@@ -97,16 +98,4 @@ public class MediaController {
         }
     }
 
-    private void requireSeller(Authentication authentication) {
-        boolean seller = isAuthenticated(authentication) && authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_SELLER")
-                        || authority.getAuthority().equals("SELLER"));
-        if (!seller) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Seller role required");
-        }
-    }
-
-    private boolean isAuthenticated(Authentication authentication) {
-        return authentication != null && authentication.isAuthenticated();
-    }
 }
