@@ -1,12 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Product, ProductService } from '../../services/product-service';
 import { UserContextService } from '../../services/user-context-service';
 
 @Component({
   selector: 'app-home',
-  imports: [DecimalPipe, RouterLink],
+  imports: [DecimalPipe, RouterLink, SlicePipe],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })

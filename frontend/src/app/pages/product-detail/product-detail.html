@@ -12,39 +12,49 @@
     </div>
   </nav>
 
-  <section class="mx-auto max-w-7xl px-5 pb-20 pt-8 sm:px-8" aria-labelledby="product-title">
-    <a routerLink="/" class="inline-flex items-center gap-2 text-sm font-bold text-teal-800 transition hover:text-teal-950">&larr; Back to products</a>
+  <section class="mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-8" aria-labelledby="product-title">
+    <nav aria-label="Breadcrumb" class="text-sm text-slate-500">
+      <a routerLink="/" class="font-semibold text-teal-800 transition hover:text-teal-950">Home</a>
+      <span class="mx-2 text-slate-400">/</span>
+      <a routerLink="/" class="transition hover:text-teal-800">All products</a>
+      <span class="mx-2 text-slate-400">/</span>
+      <span>Product details</span>
+    </nav>
 
     @if (isLoading()) {
       <div class="mt-8 grid gap-10 lg:grid-cols-2"><div class="aspect-square animate-pulse rounded-2xl bg-slate-200"></div><div class="space-y-5"><div class="h-10 animate-pulse rounded bg-slate-200"></div><div class="h-32 animate-pulse rounded bg-slate-200"></div></div></div>
     } @else if (hasError()) {
       <div class="mt-8 rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-700" role="alert">This product could not be found or is no longer available.</div>
     } @else if (product(); as currentProduct) {
-      <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-16">
-        <div>
-          <div class="aspect-square overflow-hidden rounded-2xl bg-[#e3e7df]">
-            @if (selectedImage()) { <img [src]="selectedImage()" [alt]="currentProduct.name" class="h-full w-full object-cover" /> } @else { <div class="flex h-full items-center justify-center text-sm text-slate-500">No image available</div> }
+      <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-14">
+        <div class="lg:sticky lg:top-6">
+          <div class="flex h-80 w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white sm:h-[28rem]">
+            @if (selectedImage()) { <img [src]="selectedImage()" [alt]="currentProduct.name" class="h-full w-full object-contain p-4" /> } @else { <div class="flex h-full items-center justify-center text-sm text-slate-500">No image available</div> }
           </div>
           @if (currentProduct.imageUrls.length > 1) {
             <div class="mt-4 grid grid-cols-5 gap-3" aria-label="Product images">
               @for (imageUrl of currentProduct.imageUrls; track imageUrl) {
-                <button type="button" (click)="selectImage(imageUrl)" class="aspect-square overflow-hidden rounded-lg border-2 bg-white" [class.border-teal-700]="selectedImage() === imageUrl" [class.border-transparent]="selectedImage() !== imageUrl">
-                  <img [src]="imageUrl" [alt]="currentProduct.name" class="h-full w-full object-cover" />
+                <button type="button" (click)="selectImage(imageUrl)" class="aspect-square overflow-hidden rounded-lg border-2 bg-white" [class.border-teal-700]="selectedImage() === imageUrl" [class.border-slate-200]="selectedImage() !== imageUrl">
+                  <img [src]="imageUrl" [alt]="currentProduct.name" class="h-full w-full object-contain p-1" />
                 </button>
               }
             </div>
           }
         </div>
 
-        <div class="pt-2 lg:pt-8">
-          <p class="text-xs font-bold uppercase tracking-[0.22em] text-teal-700">Product details</p>
-          <h1 id="product-title" class="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">{{ currentProduct.name }}</h1>
-          <p class="mt-5 text-2xl font-bold text-teal-800">${{ currentProduct.price | number:'1.2-2' }}</p>
-          <div class="my-8 h-px bg-slate-300"></div>
-          <p class="whitespace-pre-line text-base leading-8 text-slate-600">{{ currentProduct.description }}</p>
-          <div class="mt-8 flex items-center gap-3 border-t border-slate-300 pt-6">
+        <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Product details</p>
+          <h1 id="product-title" class="mt-3 min-w-0 break-words text-3xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-4xl">{{ currentProduct.name }}</h1>
+          <div class="mt-6 border-y border-slate-200 py-5">
+            <p class="text-3xl font-bold text-slate-950">${{ currentProduct.price | number:'1.2-2' }}</p>
+            <div class="mt-3 flex items-center gap-3">
             <span class="h-2.5 w-2.5 rounded-full" [class.bg-teal-600]="currentProduct.quantity > 0" [class.bg-red-500]="currentProduct.quantity === 0"></span>
             <p class="text-sm font-bold uppercase tracking-wider" [class.text-red-700]="currentProduct.quantity === 0" [class.text-slate-600]="currentProduct.quantity > 0">{{ currentProduct.quantity === 0 ? 'Out of stock' : currentProduct.quantity + ' available' }}</p>
+            </div>
+          </div>
+          <div class="pt-6">
+            <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">About this item</h2>
+            <p class="mt-3 max-w-prose break-words whitespace-pre-line text-sm leading-7 text-slate-600">{{ currentProduct.description }}</p>
           </div>
         </div>
       </div>

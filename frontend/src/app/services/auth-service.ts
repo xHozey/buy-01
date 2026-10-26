@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface loginReq {
   email: string;
@@ -29,7 +30,7 @@ export interface registerRes {
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/auth';
+  private readonly apiUrl = `${environment.apiBaseUrl}/auth`;
 
   login(request: loginReq): Observable<loginRes> {
     return this.http.post<loginRes>(`${this.apiUrl}/login`, request);

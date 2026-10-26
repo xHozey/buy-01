@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 interface UploadResponse {
   urls: string[];
@@ -14,7 +15,7 @@ interface SingleUploadResponse {
 @Injectable({ providedIn: 'root' })
 export class MediaService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/media';
+  private readonly apiUrl = `${environment.apiBaseUrl}/media`;
 
   uploadImages(files: File[]): Observable<UploadResponse> {
     const formData = new FormData();
