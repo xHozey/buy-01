@@ -19,6 +19,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll().anyRequest().authenticated())
             .addFilterBefore(gatewayIdentityFilter,
                 org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
