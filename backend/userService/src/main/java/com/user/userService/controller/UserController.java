@@ -22,7 +22,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public UserRes GetMe(Authentication authentication) {
+    public UserRes GetMe(Authentication authentication) {  
+
         return userService.GetMe(authentication.getName());
     }
 
