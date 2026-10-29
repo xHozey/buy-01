@@ -10,37 +10,39 @@ services:
   user:
     hostname: user
     build: ./userService
-    environment:
-      SPRING_MONGODB_URI: ${SPRING_MONGODB_URI:-mongodb://admin:password@mongodb:27017/?authSource=admin}
-      SPRING_MONGODB_DATABASE: ${SPRING_MONGODB_DATABASE:-userDB}
     ports:
       - "8081"
     depends_on:
       - server
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-test}
+      - MONGODB_URI=${MONGODB_URI:-test}
 
   product:
     hostname: product
     build: ./productService
-    environment:
-      SPRING_MONGODB_URI: ${SPRING_MONGODB_URI:-mongodb://admin:password@mongodb:27017/?authSource=admin}
-      SPRING_MONGODB_DATABASE: ${SPRING_MONGODB_DATABASE:-productDB}
     ports:
       - "8082"
     depends_on:
       - server
       - broker
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-test}
+      - MONGODB_URI=${MONGODB_URI:-test}
 
   media:
     hostname: media
     build: ./mediaService
-    environment:
-      SPRING_MONGODB_URI: ${SPRING_MONGODB_URI:-mongodb://admin:password@mongodb:27017/?authSource=admin}
-      SPRING_MONGODB_DATABASE: ${SPRING_MONGODB_DATABASE:-mediaDB}
     ports:
       - "8083"
     depends_on:
       - server
       - broker
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-test}
+      - MONGODB_URI=${MONGODB_URI:-test}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-test}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-test}
 
   gateway:
     hostname: gatewat
@@ -52,6 +54,10 @@ services:
       - user
       - product
       - media
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-test}
+      - SERVER_SSL_KEY_STORE_PASSWORD=${SERVER_SSL_KEY_STORE_PASSWORD:-test}
+
 
   mongodb:
     image: mongo:7.0
