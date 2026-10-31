@@ -39,36 +39,20 @@ pipeline {
 
         stage('Backend build and tests') {
             steps {
-                script {
-                    def requiredVariables = [
-                        'JWT_SECRET',
-                        'MONGODB_URI',
-                        'CLOUDINARY_API_KEY',
-                        'CLOUDINARY_API_SECRET',
-                        'SERVER_SSL_KEY_STORE_PASSWORD'
-                    ]
-                    def missingVariables = requiredVariables.findAll { !env[it]?.trim() }
-                    if (missingVariables) {
-                        error("Missing Jenkins environment variables: ${missingVariables.join(', ')}. Set them in jenkins/.env.")
-                    }
+                sh '''
+                    set -eu
+                    : "${JWT_SECRET:?Set JWT_SECRET in jenkins/.env}"
+                    : "${MONGODB_URI:?Set MONGODB_URI in jenkins/.env}"
+                    : "${CLOUDINARY_API_KEY:?Set CLOUDINARY_API_KEY in jenkins/.env}"
+                    : "${CLOUDINARY_API_SECRET:?Set CLOUDINARY_API_SECRET in jenkins/.env}"
+                    : "${SERVER_SSL_KEY_STORE_PASSWORD:?Set SERVER_SSL_KEY_STORE_PASSWORD in jenkins/.env}"
+                    export SPRING_KAFKA_LISTENER_AUTO_STARTUP=false
 
-                    withEnv([
-                        "JWT_SECRET=${env.JWT_SECRET}",
-                        "MONGODB_URI=${env.MONGODB_URI}",
-                        "CLOUDINARY_API_KEY=${env.CLOUDINARY_API_KEY}",
-                        "CLOUDINARY_API_SECRET=${env.CLOUDINARY_API_SECRET}",
-                        "SERVER_SSL_KEY_STORE_PASSWORD=${env.SERVER_SSL_KEY_STORE_PASSWORD}",
-                        'SPRING_KAFKA_LISTENER_AUTO_STARTUP=false'
-                    ]) {
-                        sh '''
-                            set -eu
-                            for service in server gateway userService productService mediaService; do
-                                echo "Building and testing backend/${service}"
-                                (cd "backend/${service}" && ./mvnw -B -ntp verify)
-                            done
-                        '''
-                    }
-                }
+                    for service in server gateway userService productService mediaService; do
+                        echo "Building and testing backend/${service}"
+                        (cd "backend/${service}" && ./mvnw -B -ntp verify)
+                    done
+                '''
             }
         }
     }
