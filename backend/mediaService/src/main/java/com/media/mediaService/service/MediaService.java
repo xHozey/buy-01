@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,10 +26,16 @@ public class MediaService {
     private static final String PNG_CONTENT_TYPE = "image/png";
 
     private final Cloudinary cloudinary;
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
 
+    @Autowired
     public MediaService(Cloudinary cloudinary) {
+        this(cloudinary, RestClient.create());
+    }
+
+    MediaService(Cloudinary cloudinary, RestClient restClient) {
         this.cloudinary = cloudinary;
+        this.restClient = restClient;
     }
 
     public String uploadImage(MultipartFile file) throws IOException {
