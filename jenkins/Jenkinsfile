@@ -63,6 +63,40 @@ pipeline {
         }
         success {
             archiveArtifacts artifacts: 'frontend/dist/**,backend/*/target/*.jar', allowEmptyArchive: true
+            script {
+                if (env.CI_EMAIL_TO) {
+                    try {
+                        emailext(
+                            to: env.CI_EMAIL_TO,
+                            subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                            body: "Build succeeded.\n\n${env.BUILD_URL}",
+                            mimeType: 'text/plain'
+                        )
+                    } catch (ignored) {
+                        echo 'The success notification could not be sent; check the Jenkins SMTP settings.'
+                    }
+                } else {
+                    echo 'Set CI_EMAIL_TO in jenkins/.env to receive build notifications.'
+                }
+            }
+        }
+        failure {
+            script {
+                if (env.CI_EMAIL_TO) {
+                    try {
+                        emailext(
+                            to: env.CI_EMAIL_TO,
+                            subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                            body: "Build failed. Check the Jenkins console output for details.\n\n${env.BUILD_URL}",
+                            mimeType: 'text/plain'
+                        )
+                    } catch (ignored) {
+                        echo 'The failure notification could not be sent; check the Jenkins SMTP settings.'
+                    }
+                } else {
+                    echo 'Set CI_EMAIL_TO in jenkins/.env to receive build notifications.'
+                }
+            }
         }
     }
 }

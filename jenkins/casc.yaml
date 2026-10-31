@@ -23,6 +23,20 @@ tool:
                     id: "22.16.0"
                     npmPackagesRefreshHours: 72
 
+unclassified:
+  location:
+    adminAddress: "${SMTP_FROM:-jenkins@localhost}"
+  extendedEmailPublisher:
+    defaultContentType: "text/plain"
+    defaultRecipients: "${CI_EMAIL_TO:-}"
+    mailAccount:
+      smtpHost: "${SMTP_HOST:-}"
+      smtpPort: "${SMTP_PORT:-587}"
+      smtpUsername: "${SMTP_USERNAME:-}"
+      smtpPassword: "${SMTP_PASSWORD:-}"
+      useTls: ${SMTP_USE_TLS:-true}
+      useSsl: ${SMTP_USE_SSL:-false}
+
 jobs:
   - script: |
       pipelineJob('buy-01') {

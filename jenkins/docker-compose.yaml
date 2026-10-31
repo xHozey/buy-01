@@ -7,7 +7,7 @@ services:
     command:
       - >-
         set -eu;
-        if [ ! -f /var/jenkins_home/.jenkins-plugins-installed ]; then
+        if [ ! -f /var/jenkins_home/.jenkins-plugins-installed ] || [ ! -f /var/jenkins_home/plugins/email-ext.jpi ]; then
           jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt --plugin-download-directory /var/jenkins_home/plugins;
           touch /var/jenkins_home/.jenkins-plugins-installed;
         fi;
