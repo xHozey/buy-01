@@ -15,10 +15,10 @@ services:
     ports:
       - "8079:8080"
       - "50000:50000"
+    env_file:
+      - .env
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc.yaml
-      JENKINS_ADMIN_ID: ${JENKINS_ADMIN_ID:-admin}
-      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-test}
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./casc.yaml:/var/jenkins_home/casc.yaml:ro
