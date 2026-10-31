@@ -1,0 +1,44 @@
+jenkins:
+  systemMessage: "Buy-01 Jenkins controller configured with JCasC"
+  numExecutors: 2
+  mode: NORMAL
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+tool:
+  nodejs:
+    installations:
+      - name: "NodeJS 22"
+        properties:
+          - installSource:
+              installers:
+                - nodeJSInstaller:
+                    id: "22.16.0"
+                    npmPackagesRefreshHours: 72
+
+jobs:
+  - script: |
+      pipelineJob('buy-01') {
+        description('Runs the Buy-01 Jenkins pipeline.')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/xHozey/buy-01.git')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('jenkins/Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }

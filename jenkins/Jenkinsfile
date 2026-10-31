@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Frontend build') {
+            steps {
+                dir('frontend') {
+                    sh 'npm ci'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Frontend unit tests') {
+            steps {
+                dir('frontend') {
+                    sh "npm test -- --watch=false --include='src/app/services/*.spec.ts'"
+                }
+            }
+        }
+
+        stage('Backend build and tests') {
+            steps {
+                sh '''
+                    set -eu
+                    for service in server gateway userService productService mediaService; do
+                        echo "Building and testing backend/${service}"
+                        (cd "backend/${service}" && ./mvnw -B -ntp verify)
+                    done
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            junit testResults: 'backend/**/target/surefire-reports/TEST-*.xml', allowEmptyResults: true
+        }
+        success {
+            archiveArtifacts artifacts: 'frontend/dist/**,backend/*/target/*.jar', allowEmptyArchive: true
+        }
+    }
+}
