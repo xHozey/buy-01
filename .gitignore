@@ -2,3 +2,4 @@
 .github
 /backend/data
 /backend/.env
+/jenkins/.env
