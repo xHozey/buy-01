@@ -1,5 +1,6 @@
 services:
   web:
+    image: ${IMAGE_NAMESPACE:-mr-jenk}/frontend:${IMAGE_TAG:-latest}
     build:
       context: .
     ports:

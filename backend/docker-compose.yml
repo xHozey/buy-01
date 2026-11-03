@@ -1,6 +1,7 @@
 services:
   server:
     hostname: server
+    image: ${IMAGE_NAMESPACE:-mr-jenk}/server:${IMAGE_TAG:-latest}
     build: ./server
     ports:
       - "8761:8761"
@@ -9,6 +10,7 @@ services:
 
   user:
     hostname: user
+    image: ${IMAGE_NAMESPACE:-mr-jenk}/user:${IMAGE_TAG:-latest}
     build: ./userService
     ports:
       - "8081"
@@ -20,6 +22,7 @@ services:
 
   product:
     hostname: product
+    image: ${IMAGE_NAMESPACE:-mr-jenk}/product:${IMAGE_TAG:-latest}
     build: ./productService
     ports:
       - "8082"
@@ -32,6 +35,7 @@ services:
 
   media:
     hostname: media
+    image: ${IMAGE_NAMESPACE:-mr-jenk}/media:${IMAGE_TAG:-latest}
     build: ./mediaService
     ports:
       - "8083"
@@ -46,6 +50,7 @@ services:
 
   gateway:
     hostname: gatewat
+    image: ${IMAGE_NAMESPACE:-mr-jenk}/gateway:${IMAGE_TAG:-latest}
     build: ./gateway
     ports:
       - "8080:8080"
