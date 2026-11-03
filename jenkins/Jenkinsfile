@@ -55,6 +55,14 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deployment') {
+            steps {
+                sh '''
+                docker ps
+                '''
+            }
+        }
     }
 
     post {
