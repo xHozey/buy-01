@@ -19,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: mr-jenk/jenkins:dind
     container_name: jenkins
     restart: unless-stopped
     depends_on:
