@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+repo_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+cd "$repo_root"
+
 namespace=mr-jenk
 release="build-${BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}"
 services='server user product media gateway frontend'

@@ -5,7 +5,6 @@ services:
     privileged: true
     restart: unless-stopped
     ports:
-      - "4200:4200"
       - "4443:4443"
       - "8080:8080"
       - "8761:8761"
