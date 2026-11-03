@@ -12,6 +12,9 @@ rollback() {
     docker compose -p frontend -f frontend/docker-compose.yaml up -d --no-build || true
 }
 
+docker compose -p backend -f backend/docker-compose.yml down --remove-orphans
+docker compose -p frontend -f frontend/docker-compose.yaml down --remove-orphans
+
 for service in $services; do
     if docker image inspect "$namespace/$service:latest" >/dev/null 2>&1; then
         docker tag "$namespace/$service:latest" "$namespace/$service:previous"
