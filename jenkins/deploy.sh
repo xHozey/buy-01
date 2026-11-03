@@ -27,16 +27,21 @@ done
 if ! (
     export IMAGE_NAMESPACE="$namespace"
     export IMAGE_TAG="$release"
+    export COMPOSE_PARALLEL_LIMIT=1
 
-    docker compose -p backend -f backend/docker-compose.yml build
-    docker compose -p frontend -f frontend/docker-compose.yaml build
+    echo 'Building backend images...'
+    docker compose -p backend -f backend/docker-compose.yml build --progress=plain
+    echo 'Building frontend image...'
+    docker compose -p frontend -f frontend/docker-compose.yaml build --progress=plain
 
     for service in $services; do
         docker tag "$namespace/$service:$release" "$namespace/$service:latest"
     done
 
     export IMAGE_TAG=latest
+    echo 'Starting backend containers...'
     docker compose -p backend -f backend/docker-compose.yml up -d --no-build
+    echo 'Starting frontend container...'
     docker compose -p frontend -f frontend/docker-compose.yaml up -d --no-build
 ); then
     rollback
