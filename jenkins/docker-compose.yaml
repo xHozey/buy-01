@@ -4,6 +4,11 @@ services:
     container_name: jenkins-docker
     privileged: true
     restart: unless-stopped
+    ports:
+      - "4200:4200"
+      - "4443:4443"
+      - "8080:8080"
+      - "8761:8761"
     environment:
       DOCKER_TLS_CERTDIR: ""
     command: ["--host=tcp://0.0.0.0:2375"]
