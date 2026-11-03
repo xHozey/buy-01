@@ -1,10 +1,29 @@
 services:
+  docker:
+    image: docker:27-dind
+    container_name: jenkins-docker
+    privileged: true
+    restart: unless-stopped
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    command: ["--host=tcp://0.0.0.0:2375"]
+    volumes:
+      - docker_data:/var/lib/docker
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   jenkins:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: jenkins
     restart: unless-stopped
+    depends_on:
+      docker:
+        condition: service_healthy
     ports:
       - "8079:8080"
       - "50000:50000"
@@ -12,10 +31,12 @@ services:
       - .env
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc.yaml
+      DOCKER_HOST: tcp://docker:2375
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./casc.yaml:/var/jenkins_home/casc.yaml:ro
       - ./plugins.txt:/usr/share/jenkins/ref/plugins.txt:ro
 
 volumes:
+  docker_data:
   jenkins_home:

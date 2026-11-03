@@ -41,6 +41,9 @@ jobs:
   - script: |
       pipelineJob('buy-01') {
         description('Runs the Buy-01 Jenkins pipeline.')
+        triggers {
+          scm('H/1 * * * *')
+        }
         definition {
           cpsScm {
             scm {
