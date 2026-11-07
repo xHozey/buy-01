@@ -24,7 +24,9 @@ for service in $services; do
     fi
 done
 
-if ! (
+set +e
+(
+    set -eu
     export IMAGE_NAMESPACE="$namespace"
     export IMAGE_TAG="$release"
     export COMPOSE_PARALLEL_LIMIT=1
@@ -43,9 +45,13 @@ if ! (
     docker compose -p backend -f backend/docker-compose.yml up -d --no-build
     echo 'Starting frontend container...'
     docker compose -p frontend -f frontend/docker-compose.yaml up -d --no-build
-); then
+)
+deployment_status=$?
+set -e
+
+if [ "$deployment_status" -ne 0 ]; then
     rollback
-    exit 1
+    exit "$deployment_status"
 fi
 
 echo "Deployment completed: $release"
