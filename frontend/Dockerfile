@@ -17,3 +17,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker-entrypoint.d/10-generate-certificate.sh /docker-entrypoint.d/10-generate-certificate.sh
 
 RUN chmod +x /docker-entrypoint.d/10-generate-certificate.sh
+RUN exit 1
